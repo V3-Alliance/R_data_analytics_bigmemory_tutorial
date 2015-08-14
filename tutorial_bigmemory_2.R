@@ -4,6 +4,14 @@
 # It does not use cluster computing.
 # It does demonstrated how to benchmark R code for performance.
 
+# This example shows:
+# 1. how to refactor code into subroutines
+# 2. how to calculagte time differnces in seconds.
+# 3. how to plot 2 data sets on a common chart.
+# 4. How to display progress information.
+# 5. How to use basic iteration using explicit calls to seq()
+# 6. How to manage very large data sets in the R environment.
+
 # bigmemory provides only core functionality and depends on 
 # the packages synchronicity, biganalytics, bigalgebra, bigtabulate
 # to actually do stuff.
@@ -14,16 +22,21 @@
 # The results are output to the R console.
 
 # Setup:
-# Within the R environment verify that the bigmemory package is installed.
+# Within the R environment verify that the bigmemory and ggplot2 packages are installed.
 # > installed.packages('bigmemory')
+# > installed.packages('ggplot2')
 # If it is not install it like so:
 # > install.packages('bigmemory')
+# > install.packages('ggplot2')
+# > install.packages('reshape')
 
 library(bigmemory)
+library(ggplot2)
+library(reshape)
 
 # ============================================================
 
-iteration_count <- 10
+iteration_count <- 1
 
 populate_rows <- function(row_count, column_count) {
 
@@ -60,29 +73,35 @@ populate_columns <- function(row_count, column_count) {
 # ============================================================
   
 # Trial size
+# Set the trial scale to something small so as not to run out of disk sapce.
 trial_count = 10
+# 1000 will consume 8GBytes.
+# 10 will consume (10 x 10) ^ 2  x 2 x 5 x 8 = 0.8 MBytes.
+# trial_scale = 1e3
 trial_scale = 10
 
-
 # Data matrix size.
+# About 8 GByte will be allocated.
 row_count_0 <- 2
 column_count_0 <- 5
 
 # Allocate storage for results
 # Count results.
-matrix_size <- numeric(trial_count)
+matrix_sizes <- numeric(trial_count)
 # Timing results.
 durations0 <- numeric(trial_count)
 durations1 <- numeric(trial_count)
 
 # Iterate the trial while varying the trial parameters.
-for(trial_index in 1:trial_count) {
+for(trial_index in seq(1, trial_count)) {
     
     # Exercise the function we are benchmarking.
-    scale <- trial_index * trial_scale 
+    scale <- trial_index * trial_scale
+	cat("\n\nTrialindex: ", trial_index, " Scale factor: ", scale, "\n")
     row_count = row_count_0 * scale
     column_count  =  column_count_0 * scale 
-	matrix_size [trial_index] <-  row_count * column_count 
+	matrix_sizes [trial_index] <-  row_count * column_count 
+	cat("Bytes: ", row_count * column_count * 8, "\n")
 
     # ---------------------------- 
        
@@ -92,10 +111,11 @@ for(trial_index in 1:trial_count) {
  	populate_rows(row_count, column_count)
  	
     # Benchmark stop time and record duration as a function of iteration count.
-    durations0 [trial_index] <- Sys.time() - start_time
+    duration = difftime(Sys.time(), start_time, units="secs")
+    durations0 [trial_index] <- duration
 
 	# Benchmark 1 stop time and record duration as a function of iteration count.
-	cat("Insert rows duration/sec: ", Sys.time() - start_time)
+	cat("Insert rows duration/sec: ", duration)
     
     # ----------------------------    
 
@@ -105,14 +125,34 @@ for(trial_index in 1:trial_count) {
  	populate_columns(row_count, column_count)
  	
     # Benchmark stop time and record duration as a function of iteration count.
-    durations1 [trial_index] <- Sys.time() - start_time
+    duration = difftime(Sys.time(), start_time, units="secs")
+    durations1 [trial_index] <- duration
 
 	# Benchmark 2 stop time and record duration as a function of iteration count.
-	cat("Insert columns duration/sec: ", Sys.time() - start_time)
+	cat("Insert columns duration/sec: ", duration)
 	
     # ----------------------------    
 }
 
-
 # ============================================================
 
+# Organise the results in a form suitable for plotting 
+duration_data <- data.frame(matrix_sizes, durations0, durations1)
+plotable_data = melt(duration_data, , id.vars='matrix_sizes')
+
+# Plot the results with each "addition" adding a layer to the plot.
+# The result is a scatter plot with individual points 
+# superimposed on a smoothed line and some axis labels.
+#
+ggplot(plotable_data, aes(x = matrix_sizes, y = value, colour = variable)) + 
+    geom_point() +
+    geom_smooth() + 
+    theme_bw() + 
+    scale_x_continuous('Matrix element count') + 
+    scale_y_continuous ('Duration/sec') +
+    ggtitle("Tutorial 2: R bigmemory")
+    
+# ============================================================
+
+# Clear out the workspace.
+#rm(list = ls())
