@@ -1,6 +1,6 @@
-# Tutorial 0: High Performance Data Analytics with R (package: bigmemory) 
+# Tutorial 1: High Performance Data Analytics with R (package: bigmemory) 
 
-# This example is the baseline for a series of HPC/R tutorials.
+# This example tests how column vs row population of big.matrix affects exection time.
 # It does not use cluster computing.
 # It does demonstrated how to benchmark R code for performance.
 
@@ -22,10 +22,7 @@
 library(bigmemory)
 
 # ============================================================
- 
-# Benchmark start time.
-start_time <- Sys.time()
- 
+  
 # Trial size
 iteration_count <- 10
 
@@ -34,6 +31,10 @@ iteration_count <- 10
 
 row_count <- 5000
 column_count <- 2000
+
+# -----------------------------------
+# Benchmark 1 start time.
+start_time <- Sys.time()
 
 data0 <- big.matrix(row_count, column_count, type="double", init = 0.0, dimnames=list(NULL, c("alpha", "beta")))
 
@@ -47,22 +48,27 @@ for (iteration_index in 1:iteration_count) {
 	}
 }
 
-# Benchmark stop time and record duration as a function of iteration count.
+# Benchmark 1 stop time and record duration as a function of iteration count.
 cat("Insert rows duration/sec: ", Sys.time() - start_time)
 
-# Show metadata for a big.matrix. The result can be used to reattach to a big.matrix.
-describe(data0)
+# -----------------------------------
+# Benchmark 2 start time.
+start_time <- Sys.time()
 
-# Show some of the elements of a big.matrix.
-# head(data0)
-# tail(data0)
+data1 <- big.matrix(row_count, column_count, type="double", init = 0.0, dimnames=list(NULL, c("alpha", "beta")))
 
-# Show all of the elements of a big.matrix.
-# Don't do this if the matrix is very big.
-# print(data0)
- 
-# Report results.
-# Record first 6 rows.
-sink("tutorial_bigmemory_0.result") # Redirect console output to the named file
-head(data0)
-sink() # Restore output to the console
+# Generate some random numbers, store them in the data matrix.
+# The process id is reported as this will be helpful info when running on a cluster node.
+for (iteration_index in 1:iteration_count) { 
+    cat("PID: ", Sys.getpid(), " Iteration: ", iteration_index,'\n') 
+	# Insert columns of uniform random numbers in the range 0 to 1
+	for (column_index in 1:column_count) {
+		data1[,column_index] <- runif(row_count, 0, 1)
+	}
+}
+
+# Benchmark 2 stop time and record duration as a function of iteration count.
+cat("Insert columns duration/sec: ", Sys.time() - start_time)
+
+# -----------------------------------
+
