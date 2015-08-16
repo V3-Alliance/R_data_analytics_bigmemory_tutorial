@@ -9,6 +9,9 @@
 #     how many cpus and cores?
 #PBS -l nodes=1:ppn=8
 
+#      how much memory
+#PBS -l mem=1G
+
 #     How long to run the job? (hours:minutes:seconds)
 #PBS -l walltime=0:30:0
 
@@ -17,6 +20,8 @@
 
 #     Name of output file:
 #PBS -o tutorial_bigmemory_0.out
+# Join the output and error streams so we can view them together using qpeek 
+#PBS -j oe
 
 #     Environmental variables to make it work:
 
@@ -35,6 +40,6 @@ cd $PBS_O_WORKDIR
  
 #     Launching the job!
 
-R --vanilla CMD BATCH tutorial_foreach_2.R
+R --vanilla < tutorial_bigmemory_2.R
 
 
