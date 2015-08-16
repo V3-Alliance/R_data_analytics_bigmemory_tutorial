@@ -6,7 +6,7 @@
 
 # This example shows:
 # 1. how to refactor code into subroutines
-# 2. how to calculagte time differnces in seconds.
+# 2. how to calculate time differences in seconds.
 # 3. how to plot 2 data sets on a common chart.
 # 4. How to display progress information.
 # 5. How to use basic iteration using explicit calls to seq()
@@ -25,7 +25,7 @@
 # Within the R environment verify that the bigmemory and ggplot2 packages are installed.
 # > installed.packages('bigmemory')
 # > installed.packages('ggplot2')
-# If it is not install it like so:
+# If it is not, install it like so:
 # > install.packages('bigmemory')
 # > install.packages('ggplot2')
 # > install.packages('reshape')
@@ -72,12 +72,13 @@ populate_columns <- function(row_count, column_count) {
 
 # ============================================================
   
-# Trial size
-# Set the trial scale to something small so as not to run out of disk sapce.
+# Trial size, aka the number of data points to be plotted.
 trial_count = 10
-# 1000 will consume 8GBytes.
+
+# Set the trial scale to something small so as not to run out of disk space.
 # 10 will consume (10 x 10) ^ 2  x 2 x 5 x 8 = 0.8 MBytes.
-# trial_scale = 1e3
+# 1000 will consume 8GBytes.
+# trial_scale = 1e3 Don't use this much on a node. Use the Lustre file system.
 trial_scale = 10
 
 # Data matrix size.
@@ -136,7 +137,7 @@ for(trial_index in seq(1, trial_count)) {
 
 # ============================================================
 
-# Organise the results in a form suitable for plotting 
+# Organise the results into a form suitable for plotting 
 duration_data <- data.frame(matrix_sizes, durations0, durations1)
 plotable_data = melt(duration_data, , id.vars='matrix_sizes')
 
