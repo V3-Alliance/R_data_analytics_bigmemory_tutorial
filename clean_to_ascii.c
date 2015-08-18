@@ -19,30 +19,42 @@ int main(int argc, char **argv)
 	if (argc == 3)
 	{
 		printf ("Locale: %s\n", setlocale(LC_ALL, NULL));
-
 		time ( &start_time );
 		timeinfo = localtime ( &start_time );
-		strftime (buffer,80,"%c",timeinfo);
-		printf ("Date is: %s\n",buffer);
-	
+		strftime (buffer,80,"%c", timeinfo);
+		printf ("Date is: %s\n", buffer);
+        
 		char* source_file = argv[1];
-		char* destination_file = argv[2];
 		FILE *fin = fopen(source_file, "rb");
-		FILE *fout = fopen(destination_file, "w");
+        if (NULL == fin)
+        {
+            printf ("Null input file pointer from path: %s.\n", source_file);
+            return 1;
+        }
+
+        char* destination_file = argv[2];
+        FILE *fout = fopen(destination_file, "w");
+        if (NULL == fout)
+        {
+            printf ("Null output file pointer from path: %s.\n", destination_file);
+            return 1;
+        }
+        
 		int c;
-		while ((c = fgetc(fin)) != EOF) 
+		while ((c = fgetc(fin)) != EOF)
 		{
 			if (isprint(c) || c == '\n')
 			{
 				fputc(c, fout);
 			}
 		}
-		fclose(fin);
+        
+        fclose(fin);
 		fclose(fout);
 
 		time ( &end_time );
 		timeinfo = localtime ( &end_time );
-		strftime (buffer,80,"%c",timeinfo);
+		strftime (buffer, 80, "%c", timeinfo);
 		printf ("Date is: %s\n",buffer);
 		
 		duration_secs = difftime(end_time, start_time);
