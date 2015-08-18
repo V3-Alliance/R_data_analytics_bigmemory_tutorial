@@ -38,9 +38,12 @@ read_csv_file_into_bigmatrix = function (file_name_csv) {
 	    backingfile = matrix_file_name , backingpath = "/lustre/pVPAC0012/")
 	    #backingfile = NULL , backingpath = NULL) Causes the Out of memory killer to kill the process.
 	flush(matrix_0)
+	return(matrix_0)
 }
 
 # ============================================================
+
+is_first_file = TRUE
 
 project_storage_path = "/lustre/pVPAC0012"
 file_names <- list.files(path = project_storage_path, pattern = "^\\d{4}\\.csv$")
@@ -51,7 +54,14 @@ for (file_index in 1:file_count) {
 	start_time <- Sys.time()
 
 	file_name_csv <- file_names[file_index]
-	read_csv_file_into_bigmatrix(file_name_csv)
+	part_matrix <- read_csv_file_into_bigmatrix(file_name_csv)
+	
+	if (is_first_file) {
+		full_matrix <- big.matrix(nrow(part_matrix), ncol()part_matrix, typem = "double", 
+							init = 0.0, dimnames = NULL, separated = FALSE,
+      						backingfile = "airline.matrix", backingpath = project_storage_path)
+		is_first_file <- FALSE
+	}
 	
 	# Benchmark stop time and record duration.
 	duration = difftime(Sys.time(), start_time, units="secs")
