@@ -41,8 +41,8 @@
 # $ mv 2002.csv 2002.csv.orig; mv 2002.clean.csv 2002.csv
 
 # ============================================================
-# Setup:
 
+# Setup:
 # Within the R environment verify that the bigmemory packages is installed.
 # > installed.packages('bigmemory')
 # If it is not, install it like so:
@@ -62,25 +62,34 @@ read_csv_file_into_bigmatrix = function (file_name_csv) {
 	    col.names = NULL, row.names = NULL, has.row.names=FALSE, ignore.row.names=FALSE,
 	    type = NA, skip = 0, separated = FALSE,
 	    backingfile = matrix_file_name , backingpath = "/lustre/pVPAC0012/")
-	    #backingfile = NULL , backingpath = NULL) Causes the Out Of Memory (OOM) daemon to kill the process.
+	    #backingfile = NULL , backingpath = NULL) Causes the Out of memory killer to kill the process.
 	flush(matrix_0)
+	return(matrix_0)
 }
 
 # ============================================================
 
+is_first_file = TRUE
+
 project_storage_path = "/lustre/pVPAC0012"
 file_names <- list.files(path = project_storage_path, pattern = "^\\d{4}\\.csv$")
+file_index_start <- 1
 file_count <- length(file_names)
-#file_index_start <- 1
-file_index_start <- 18
 for (file_index in file_index_start:file_count) {
 
 	# Benchmark start time.
 	start_time <- Sys.time()
 
 	file_name_csv <- file_names[file_index]
-	read_csv_file_into_bigmatrix(file_name_csv)
+	part_matrix <- read_csv_file_into_bigmatrix(file_name_csv)
 	
+	if (is_first_file) {
+		full_matrix <- big.matrix(nrow(part_matrix), ncol(part_matrix), typem = "double", 
+							init = 0.0, dimnames = NULL, separated = FALSE,
+      						backingfile = "airline.matrix", backingpath = project_storage_path)
+		is_first_file <- FALSE
+	}
+		
 	# Benchmark stop time and record duration.
 	duration = difftime(Sys.time(), start_time, units="secs")
 	cat("\nRead file into matrix duration/sec: ", duration)

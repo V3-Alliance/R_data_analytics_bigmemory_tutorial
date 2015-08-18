@@ -13,7 +13,7 @@
 #PBS -l mem=3G
 
 #     How long to run the job? (hours:minutes:seconds)
-#PBS -l walltime=0:30:0
+#PBS -l walltime=1:00:0
 
 # Inherit the correct environment variables
 #PBS -V
