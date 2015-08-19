@@ -51,6 +51,12 @@
 library(bigmemory)
 
 # ============================================================
+# Constants
+
+project_storage_path = "/lustre/pVPAC0012"
+
+# ============================================================
+# Function definitions
 
 read_csv_file_into_bigmatrix = function (file_name_csv) {
 	cat("\nFile: ", file_name_csv, "\n")
@@ -62,7 +68,7 @@ read_csv_file_into_bigmatrix = function (file_name_csv) {
 	matrix_0 = read.big.matrix(file_path_csv, sep = ',', header = TRUE, 
 	    col.names = NULL, row.names = NULL, has.row.names=FALSE, ignore.row.names=FALSE,
 	    type = NA, skip = 0, separated = FALSE,
-	    backingfile = matrix_file_name, backingpath = "/lustre/pVPAC0012/",
+	    backingfile = matrix_file_name, backingpath = project_storage_path,
 	    descriptor = desc_file_name)
 	flush(matrix_0)
 	return(matrix_0)
@@ -70,12 +76,10 @@ read_csv_file_into_bigmatrix = function (file_name_csv) {
 
 # ============================================================
 
-is_first_file = TRUE
 matrix_list = list()
 row_count <- 0
 col_count <- 0
 
-project_storage_path = "/lustre/pVPAC0012"
 file_names <- list.files(path = project_storage_path, pattern = "^\\d{4}\\.csv$")
 
 file_count <- length(file_names)
@@ -113,7 +117,7 @@ for (file_index in file_index_start:file_count) {
 
 # Allocate the whole result matrix.	
 
-full_matrix <- filebacked.big.matrix(row_count, col_count, type="double", init=NULL, 
+full_matrix <- filebacked.big.matrix(row_count, col_count, type="integer", init=NULL, 
 	dimnames = NULL, separated = FALSE, 
 	backingfile = "all.matrix", backingpath = project_storage_path, descriptorfile = "all.matrix.desc")
 
@@ -135,7 +139,7 @@ for (matrix_index in 1:matrix_count) {
 
 	# Benchmark stop time and record duration.
 	duration = difftime(Sys.time(), start_time, units = "secs")
-	cat("\nRead append matrix to matrix duration/sec: ", duration, "\n")
+	cat("\nAppend matrix to all matrix duration/sec: ", duration, "\n")
 
 }
    

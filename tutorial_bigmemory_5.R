@@ -1,6 +1,6 @@
 # Tutorial 5: High Performance Data Analytics with R (package: bigmemory) 
 
-# This example concatenates a group of csv data files so they can be processed by bigmemory.
+# This example concatenates a group of big.matrix binary files into one humungous big.matrix file.
 # It does not use cluster computing.
 # It does demonstrated how to benchmark R code for performance.
 
@@ -47,7 +47,6 @@ attach_bigmatrix = function (file_name_desc) {
 
 # ============================================================
 
-is_first_file = TRUE
 matrix_list = list()
 row_count <- 0
 col_count <- 0
@@ -89,9 +88,10 @@ for (file_index in file_index_start:file_count) {
 
 # Allocate the whole result matrix.	
 
-full_matrix <- filebacked.big.matrix(row_count, col_count, type="double", init=NULL, 
+full_matrix <- filebacked.big.matrix(row_count, col_count, type="integer", init=NULL, 
 	dimnames = NULL, separated = FALSE, 
-	backingfile = "all.matrix", backingpath = project_storage_path, descriptorfile = "all.matrix.desc")
+	backingfile = "all.matrix2", backingpath = project_storage_path, 
+	descriptorfile = "all.matrix.desc")
 
 # Populate the whole result matrix.
 
