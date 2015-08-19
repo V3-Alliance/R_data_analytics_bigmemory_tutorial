@@ -53,7 +53,7 @@ library(bigmemory)
 # ============================================================
 
 read_csv_file_into_bigmatrix = function (file_name_csv) {
-	cat("\nFile: ", file_name_csv)
+	cat("\nFile: ", file_name_csv, "\n")
 	file_path_csv <- paste(project_storage_path, file_name_csv, sep = "/")
 	base_name = strsplit(file_name_csv, "\\.")[[1]][1]
 	matrix_file_name = paste(base_name, "matrix", sep = ".")
@@ -70,11 +70,22 @@ read_csv_file_into_bigmatrix = function (file_name_csv) {
 # ============================================================
 
 is_first_file = TRUE
+matrix_list = list()
+row_count <- 0
+col_count <- 0
 
 project_storage_path = "/lustre/pVPAC0012"
 file_names <- list.files(path = project_storage_path, pattern = "^\\d{4}\\.csv$")
-file_index_start <- 1
+
 file_count <- length(file_names)
+cat("\nFile count: ", file_count, "\n")
+
+#file_index_start <- 1
+file_count_0 <- 1
+file_index_start <- file_count - file_count_0 + 1
+
+# Create a list of matrices by reading files.
+
 for (file_index in file_index_start:file_count) {
 
 	# Benchmark start time.
@@ -83,16 +94,42 @@ for (file_index in file_index_start:file_count) {
 	file_name_csv <- file_names[file_index]
 	part_matrix <- read_csv_file_into_bigmatrix(file_name_csv)
 	
-	if (is_first_file) {
-		full_matrix <- big.matrix(nrow(part_matrix), ncol(part_matrix), typem = "double", 
-							init = 0.0, dimnames = NULL, separated = FALSE,
-      						backingfile = "airline.matrix", backingpath = project_storage_path)
-		is_first_file <- FALSE
-	}
+	matrix_list <- c(matrix_list, part_matrix)
+	row_count <- row_count + nrow(part_matrix)
+	col_count <- ncol(part_matrix)
 		
 	# Benchmark stop time and record duration.
-	duration = difftime(Sys.time(), start_time, units="secs")
-	cat("\nRead file into matrix duration/sec: ", duration)
+	duration = difftime(Sys.time(), start_time, units = "secs")
+	cat("\nRead file into matrix duration/sec: ", duration, "\n")
+	
+}
+
+# Allocate the whole result matrix.	
+
+full_matrix <- filebacked.big.matrix(row_count, col_count, type="double", init=NULL, 
+	dimnames = NULL, separated = FALSE, 
+	backingfile = "all.matrix", backingpath = project_storage_path, descriptorfile = "all.matrix.desc")
+
+# Populate the whole result matrix.
+
+row_end_index <- 0
+row_start_index <- row_end_index + 1
+matrix_count <- length(matrix_list)
+matrix_index_start <- file_index_start
+for (matrix_index in 1:matrix_count) {
+
+	# Benchmark start time.
+	start_time <- Sys.time()
+
+	current_matrix <- matrix_list[[matrix_index]]
+	row_end_index <- row_start_index + nrow(current_matrix) - 1
+    full_matrix[row_start_index:row_end_index, ] <- current_matrix[,]
+    row_start_index <- row_end_index + 1		
+
+	# Benchmark stop time and record duration.
+	duration = difftime(Sys.time(), start_time, units = "secs")
+	cat("\nRead append matrix to matrix duration/sec: ", duration, "\n")
+
 }
    
 # ============================================================
