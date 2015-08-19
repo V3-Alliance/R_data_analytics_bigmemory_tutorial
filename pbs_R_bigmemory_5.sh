@@ -4,7 +4,7 @@
 # Exercises big.matrix using bigmemory. Uses just one node.
 
 #     job name:
-#PBS -N bigmemory_4
+#PBS -N bigmemory_5
 
 #     how many cpus and cores?
 #PBS -l nodes=1:ppn=8
@@ -13,13 +13,13 @@
 #PBS -l mem=4G
 
 #     How long to run the job? (hours:minutes:seconds)
-#PBS -l walltime=2:00:0
+#PBS -l walltime=1:00:0
 
 # Inherit the correct environment variables
 #PBS -V
 
 #     Name of output file:
-#PBS -o tutorial_bigmemory_4.out
+#PBS -o tutorial_bigmemory_5.out
 # Join the output and error streams so we can view them together using qpeek 
 #PBS -j oe
 
@@ -40,6 +40,6 @@ cd $PBS_O_WORKDIR
  
 #     Launching the job!
 
-R --vanilla < tutorial_bigmemory_4.R
+R --vanilla < tutorial_bigmemory_5.R
 
 

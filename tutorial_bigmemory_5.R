@@ -1,4 +1,4 @@
-# Tutorial 4: High Performance Data Analytics with R (package: bigmemory) 
+# Tutorial 5: High Performance Data Analytics with R (package: bigmemory) 
 
 # This example concatenates a group of csv data files so they can be processed by bigmemory.
 # It does not use cluster computing.
@@ -17,28 +17,7 @@
 # ============================================================
 # Preparing the dataset.
 
-# Navigate to your project directory:
-# $ cd /lustre/pVPAC0012
-# Replacing pVPAC0012 with the name of your VPAC project as seen in your account area at:
-# <https://hpc.v3.org.au/accounts/profile/projects/>
-
-# To download the files:
-# The original data comes from:
-# <http://stat-computing.org/dataexpo/2009/the-data.html>
-# <http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236>
-# $ wget http://stat-computing.org/dataexpo/2009/{1987..2007}.csv.bz2
-
-# To unpack the files:
-# $ bunzip2 *.bz2
-
-# Compile the cleaner application:
-# $ gcc -W clean_to_ascii.c -o clean_to_ascii
-
-# Clean 2 offending files:
-# $ ./clean_to_ascii /lustre/pVPAC0012/2001.csv /lustre/p2PAC0012/2001.clean.csv
-# $ mv 2001.csv 2001.csv.orig; mv 2001.clean.csv 2001.csv
-# $ ./clean_to_ascii /lustre/pVPAC0012/2002.csv /lustre/p2PAC0012/2002.clean.csv
-# $ mv 2002.csv 2002.csv.orig; mv 2002.clean.csv 2002.csv
+# See: tutorial_bigmemory_4.R
 
 # ============================================================
 
@@ -51,20 +30,18 @@
 library(bigmemory)
 
 # ============================================================
+# Constants.
 
-read_csv_file_into_bigmatrix = function (file_name_csv) {
-	cat("\nFile: ", file_name_csv, "\n")
-	file_path_csv <- paste(project_storage_path, file_name_csv, sep = "/")
-	base_name = strsplit(file_name_csv, "\\.")[[1]][1]
-	matrix_file_name = paste(base_name, "matrix", sep = ".")
-	desc_file_name = paste(base_name, "desc", sep = ".")
-	matrix_file_path = paste(project_storage_path, matrix_file_name, sep = "/")
-	matrix_0 = read.big.matrix(file_path_csv, sep = ',', header = TRUE, 
-	    col.names = NULL, row.names = NULL, has.row.names=FALSE, ignore.row.names=FALSE,
-	    type = NA, skip = 0, separated = FALSE,
-	    backingfile = matrix_file_name, backingpath = "/lustre/pVPAC0012/",
-	    descriptor = desc_file_name)
-	flush(matrix_0)
+project_storage_path = "/lustre/pVPAC0012"
+
+# ============================================================
+# Function definitions.
+
+attach_bigmatrix = function (file_name_desc) {
+	file_path_desc <- paste(project_storage_path, file_name_desc, sep = "/")
+	cat("\nFile: ", file_name_desc, "\n")
+	datadesc <- dget(file_path_desc)
+	matrix_0 = attach.big.matrix(datadesc, path=project_storage_path)
 	return(matrix_0)
 }
 
@@ -75,8 +52,7 @@ matrix_list = list()
 row_count <- 0
 col_count <- 0
 
-project_storage_path = "/lustre/pVPAC0012"
-file_names <- list.files(path = project_storage_path, pattern = "^\\d{4}\\.csv$")
+file_names <- list.files(path = project_storage_path, pattern = "^\\d{4}\\.matrix\\.desc$")
 
 file_count <- length(file_names)
 cat("\nFile count: ", file_count, "\n")
@@ -91,15 +67,15 @@ file_count_0 <- file_count
 
 file_index_start <- file_count - file_count_0 + 1
 
-# Create a list of matrices by reading files.
+# Create a list of matrices by attaching binary matrix files.
 
 for (file_index in file_index_start:file_count) {
 
 	# Benchmark start time.
 	start_time <- Sys.time()
 
-	file_name_csv <- file_names[file_index]
-	part_matrix <- read_csv_file_into_bigmatrix(file_name_csv)
+	file_name_desc <- file_names[file_index]
+	part_matrix <- attach_bigmatrix(file_name_desc)
 	
 	matrix_list <- c(matrix_list, part_matrix)
 	row_count <- row_count + nrow(part_matrix)
@@ -107,7 +83,7 @@ for (file_index in file_index_start:file_count) {
 		
 	# Benchmark stop time and record duration.
 	duration = difftime(Sys.time(), start_time, units = "secs")
-	cat("\nRead file into matrix duration/sec: ", duration, "\n")
+	cat("\nAttach memory mapped matrix file duration/sec: ", duration, "\n")
 	
 }
 
@@ -135,7 +111,7 @@ for (matrix_index in 1:matrix_count) {
 
 	# Benchmark stop time and record duration.
 	duration = difftime(Sys.time(), start_time, units = "secs")
-	cat("\nRead append matrix to matrix duration/sec: ", duration, "\n")
+	cat("\nAppend matrix to combined matrix duration/sec: [", matrix_index, "] ", duration, "\n")
 
 }
    
