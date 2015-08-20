@@ -1,4 +1,4 @@
-/* gcc -W map_fields.cpp -o map_fields */
+/* gcc -W map_fields.cpp -o map_fields  -stdlib=libstdc++ -lstdc++ */
 /* Run it with: $ ./map_fields [source-filename] [destination_filename] */
 
 #include <iostream>
