@@ -135,9 +135,6 @@ The layout matches the typedefs for field groups below.
     typedef fusion::vector<int, csv_field, int, csv_field, csv_field, csv_field, csv_field> csv_row3;
     typedef fusion::vector<csv_field> csv_row4;
     
-    using fusion::operator <<;
-    using fusion::at_c;
-
 	// TODO RR: Sorry, ugly mixture to c and c++ I might fix one day.
     if (argc == 3)
     {
@@ -178,55 +175,37 @@ The layout matches the typedefs for field groups below.
 			{
         		// Ignore header line. Just feed it though unchanged.
         		
-				std::cout << aline << std::endl;
+				destination_file << aline << std::endl;
 			} 
 			else
 			{
 				// Process the CSV rows.
 				
-				std::cout  << fusion::tuple_open("") << fusion::tuple_close("") << fusion::tuple_delimiter(',');
 				std::stringstream row(aline);
     			using fusion::operator >>;
-				std::cout << row.str() << std::endl;
 				row  >> fusion::tuple_open("") << fusion::tuple_close("") << fusion::tuple_delimiter(',') >> csv0;
-				std::cout << csv0;
-				std::cout << "-----" << row.tellg() << std::endl;
 				row.ignore(std::numeric_limits<std::streamsize>::max(), ',');
 				row  >> csv1; 
-				std::cout << csv1;
-				std::cout << "-----" << row.tellg() << std::endl;
 				row.ignore(std::numeric_limits<std::streamsize>::max(), ',');
 				row  >> csv2; 
-				std::cout << csv2;
-				std::cout << "-----" << row.tellg() << std::endl;
 				row.ignore(std::numeric_limits<std::streamsize>::max(), ',');
 				row  >> csv3;
-				std::cout << csv3;
-				std::cout << "-----" << row.tellg() << std::endl;
 				row.ignore(std::numeric_limits<std::streamsize>::max(), ',');
 				row  >> csv4;
-				std::cout << csv4;
-				row.ignore(std::numeric_limits<std::streamsize>::max(), ',');
-				std::cout << "-----" << row.tellg() << std::endl;
 				
 				
-				// destination_file << line << std::endl;
-				std::cout  << fusion::tuple_open("") << fusion::tuple_close("") << fusion::tuple_delimiter(',') 
-							<< csv0 << ","
-							<< csv1 << ","
-							<< csv2 << "," 
-							<< csv3 << "," 
-							<< csv4 
-							<< std::endl;
-
-				//std::cout  <<  csv0 << csv1 << csv2 << std::endl;
-				//std::cout   << fusion::accumulate(csv0, std::string(""), make_row())
-				//			<< fusion::accumulate(csv1, std::string(""), make_row()) 
-				//			//<< csv2 
-				//			//<< csv3 
-				//			//<< csv4 
-				//			<< std::endl;
-				
+				//destination_file << line << std::endl;
+    			using fusion::operator <<;
+				destination_file
+					// Set delimiters within field groups.
+					<< fusion::tuple_open("") << fusion::tuple_close("") << fusion::tuple_delimiter(',') 
+					// Output field groups with "," delimiters between field groups.
+					<< csv0 << ","
+					<< csv1 << ","
+					<< csv2 << "," 
+					<< csv3 << "," 
+					<< csv4 
+					<< std::endl;
 			}
 
 			line_count++;
