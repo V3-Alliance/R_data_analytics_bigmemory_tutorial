@@ -87,13 +87,14 @@ struct quoted_string_field
 };
 
 // Looks for an 0 or positive integer value, but if it finds a "NA" it interprets it as a "-1".
+template <int DEFAULT>
 struct integer_field
 {
     int value;
 
     // Read a string until a CSV delimiter is found.
     friend std::istream& operator >> (std::istream& input_stream, integer_field& csvi) {
-        csvi.value = INT_MAX;   // Default 
+        csvi.value = DEFAULT;   // Default 
         std::string buffer;
         extract_field(input_stream, buffer);
         if( buffer != "NA" )
@@ -111,7 +112,7 @@ struct integer_field
 };
 
 // Looks for an 0 or positive integer value, but if it finds a "NA" it interprets it as a "-1".
-template <class T>
+template <class T, int DEFAULT>
 struct lookup_field
 {
     int value;
@@ -119,7 +120,7 @@ struct lookup_field
     
     // Read a string until a CSV delimiter is found.
     friend std::istream& operator >> (std::istream& input_stream, lookup_field& csvi) {
-        csvi.value = INT_MAX;   // Default 
+        csvi.value = DEFAULT;   // Default 
         std::string buffer;
         extract_field(input_stream, buffer);
         if( buffer != "NA" )
@@ -140,8 +141,8 @@ struct lookup_field
     }
 };
 
-template <class T>
-std::tr1::unordered_map<std::string, int> lookup_field<T>::s_lookup_table = std::tr1::unordered_map<std::string, int>();
+template <class T, int DEFAULT>
+std::tr1::unordered_map<std::string, int> lookup_field<T, DEFAULT>::s_lookup_table = std::tr1::unordered_map<std::string, int>();
 
 // Marker classes so the template produces a new class 
 // with a new static lookup table for each usage.
@@ -253,7 +254,7 @@ void load_airports(std::ifstream& airport_file, std::tr1::unordered_map<std::str
 
 void load_cancellation_codes(std::tr1::unordered_map<std::string, int>& cancellation_code_indices)
 {
-	// A = carrier, B = weather, C = NAS, D = security        
+    // A = carrier, B = weather, C = NAS, D = security        
 
     cancellation_code_indices["A"] = 1;
     cancellation_code_indices["B"] = 2;
@@ -320,37 +321,42 @@ The layout matches the typedefs for field groups below.
     0,NA,0,NA,NA,NA,NA,
     NA
 */
-    typedef integer_field year;
-    typedef integer_field month;
-    typedef integer_field day_of_month;
-    typedef integer_field day_of_week;
-    typedef integer_field dep_time;
-    typedef integer_field crs_dep_time;
-    typedef integer_field arr_time;
-    typedef integer_field crs_arr_time;
+	//const int default_value = INT_MAX;
+	const int default_value = -1;
+    typedef integer_field<default_value> year;
+    typedef integer_field<default_value> month;
+    typedef integer_field<default_value> day_of_month;
+    typedef integer_field<default_value> day_of_week;
+    typedef integer_field<default_value> dep_time;
+    typedef integer_field<default_value> crs_dep_time;
+    typedef integer_field<default_value> arr_time;
+    typedef integer_field<default_value> crs_arr_time;
     
-    typedef lookup_field<unique_carrier_id> unique_carrier;
-    typedef integer_field flight_num;
-    typedef lookup_field<aircraft_id> tail_num;
-    typedef integer_field actual_elapsed_time;
-    typedef integer_field crs_elapsed_time;
-    typedef integer_field air_time;
-    typedef integer_field arr_delay;
-    typedef integer_field dep_delay;
+    typedef lookup_field<unique_carrier_id, default_value> unique_carrier;
+    typedef integer_field<default_value> flight_num;
+    typedef lookup_field<aircraft_id, default_value> tail_num;
+    typedef integer_field<default_value> actual_elapsed_time;
+    typedef integer_field<default_value> crs_elapsed_time;
+    typedef integer_field<default_value> air_time;
+    typedef integer_field<default_value> arr_delay;
+    typedef integer_field<default_value> dep_delay;
     
-    typedef lookup_field<airport_id> origin;
-    typedef lookup_field<airport_id> destination;
-    typedef integer_field distance;
-    typedef integer_field taxi_in;
-    typedef integer_field taxi_out;
+    typedef lookup_field<airport_id, default_value> origin;
+    typedef lookup_field<airport_id, default_value> destination;
+    typedef integer_field<default_value> distance;
+    typedef integer_field<default_value> taxi_in;
+    typedef integer_field<default_value> taxi_out;
     
-    typedef integer_field cancelled;
-    typedef lookup_field<cancellation_code_id> cancellation_code;
-    typedef integer_field diverted;
-    typedef integer_field carrier_delay;
-    typedef integer_field weather_delay;
-    typedef integer_field nas_delay;
-    typedef integer_field security_delay;
+    typedef integer_field<default_value> cancelled;
+    typedef lookup_field<cancellation_code_id, default_value> cancellation_code;
+    typedef integer_field<default_value> diverted;
+    typedef integer_field<default_value> carrier_delay;
+    typedef integer_field<default_value> weather_delay;
+    typedef integer_field<default_value> nas_delay;
+    typedef integer_field<default_value> security_delay;
+    
+    typedef integer_field<default_value> late_aircraft_delay;
+    
 
 
     // Boost Fusion vector templates limited to 10 types so the 29 fields
@@ -363,7 +369,7 @@ The layout matches the typedefs for field groups below.
     typedef fusion::vector<unique_carrier, flight_num, tail_num, actual_elapsed_time, crs_elapsed_time, air_time, arr_delay, dep_delay> csv_row1;
     typedef fusion::vector<origin, destination, distance, taxi_in, taxi_out> csv_row2;
     typedef fusion::vector<cancelled, cancellation_code, diverted, carrier_delay, weather_delay, nas_delay, security_delay> csv_row3;
-    typedef fusion::vector<integer_field> csv_row4;
+    typedef fusion::vector<late_aircraft_delay> csv_row4;
     
     // TODO RR: Sorry! ugly mixture to c and c++ I might fix one day.
     if (argc == 3)
