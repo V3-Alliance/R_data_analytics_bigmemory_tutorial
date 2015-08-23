@@ -25,9 +25,11 @@
 // The boost fusion approach used here is problematical, as it needs a bit,
 // actually a lot, of convincing to get it to work. 
 // The documentation is not explicit enough.
-// boost fusion also needs extra code for new types of csv file and is limited in the
-// number of fields it can handle conveniently.
+// This boost fusion code also needs new code for new types of csv file 
+// and is limited in the number of fields it can handle conveniently.
+// It also does not handle the CSV format in a general way.
 
+// TODO RR: clean up the includes.
 #include <climits>
 #include <iostream>
 #include <fstream>
@@ -53,11 +55,13 @@
 
 namespace fusion = boost::fusion;
 
-// I/O operators for a string field within a CSV formatted string.
+// =========================================================
+// Some I/O operators for a string field within a CSV formatted string.
 // This is required to replace std::string for string csv fields 
 // because the boost::fusion input stream parser 
 // doesn't know that a comma finishes off a string field.
 
+// Utility function used by field structs to extract comma-delimited field.
 void extract_field(std::istream& input_stream, std::string& buffer)
 {
     for(;;) 
@@ -72,6 +76,7 @@ void extract_field(std::istream& input_stream, std::string& buffer)
     }
 }
 
+// struct to extract vanilla string field.
 struct string_field
 {
     std::string value;
@@ -91,6 +96,7 @@ struct string_field
     }
 };
 
+// struct to extract quoted string field.
 struct quoted_string_field
 {
     std::string value;
@@ -110,15 +116,19 @@ struct quoted_string_field
     }
 };
 
-// Looks for an 0 or positive integer value, but if it finds a "NA" it interprets it as a "-1".
-template <int DEFAULT>
+// struct to extract an integer field that may have string "missing values".
+// Looks for an 0 or positive integer value, 
+// but if it finds a "NA" or "" it interprets it as a "-1",
+// or more generally a specified numerical missing value constant
+// outside the normal range of values, e.g. -99, -2000000, MAX_INT etc..
+template <int MISSING_VALUE_FLAG>
 struct integer_field
 {
     int value;
 
     // Read a string until a CSV delimiter is found.
     friend std::istream& operator >> (std::istream& input_stream, integer_field& csvi) {
-        csvi.value = DEFAULT;   // Default 
+        csvi.value = MISSING_VALUE_FLAG;   // Default 
         std::string buffer;
         extract_field(input_stream, buffer);
         if( buffer != "NA" )
@@ -135,8 +145,11 @@ struct integer_field
     }
 };
 
-// Looks for an 0 or positive integer value, but if it finds a "NA" it interprets it as a "-1".
-template <class T, int DEFAULT>
+// struct to extract an string field that is then transformed into an integer".
+// Looks for an 0 or positive integer value, but if it finds a "NA" it interprets it as a "-1",
+// or more generally a specified numerical missing value constant
+// outside the normal range of values, e.g. -99, -2000000, MAX_INT etc..
+template <class T, int MISSING_VALUE_FLAG>
 struct lookup_field
 {
     int value;
@@ -144,7 +157,7 @@ struct lookup_field
     
     // Read a string until a CSV delimiter is found.
     friend std::istream& operator >> (std::istream& input_stream, lookup_field& csvi) {
-        csvi.value = DEFAULT;   // Default 
+        csvi.value = MISSING_VALUE_FLAG;   // Default 
         std::string buffer;
         extract_field(input_stream, buffer);
         if( buffer != "NA" )
@@ -165,16 +178,22 @@ struct lookup_field
     }
 };
 
-template <class T, int DEFAULT>
-std::tr1::unordered_map<std::string, int> lookup_field<T, DEFAULT>::s_lookup_table = std::tr1::unordered_map<std::string, int>();
+// The static field was declared above, now it must be declared.
+template <class T, int MISSING_VALUE_FLAG>
+std::tr1::unordered_map<std::string, int> lookup_field<T, MISSING_VALUE_FLAG>::s_lookup_table = std::tr1::unordered_map<std::string, int>();
 
-// Marker classes so the template produces a new class 
-// with a new static lookup table for each usage.
+// Marker classes so the above template produces a new class, 
+// with a new static lookup table, for each usage.
 struct unique_carrier_id {};
 struct aircraft_id {};
 struct airport_id {};
 struct cancellation_code_id {};
 
+// =========================================================
+// Load lookup tables from disk or just define them in-line.
+// Each string code is given an integer representation in a sequential fashion.
+
+// Load airline carrier codes from a file.
 void load_carriers(std::ifstream& carrier_file, std::tr1::unordered_map<std::string, int>& carrier_indices)
 {
     typedef quoted_string_field code;
@@ -208,6 +227,8 @@ void load_carriers(std::ifstream& carrier_file, std::tr1::unordered_map<std::str
     std::cout << "Carrier count: " << carrier_count - 1 <<  std::endl;
 }
 
+// Load aircraft codes from a file. This list is not a complete list of all aircraft.
+// TODO RR: build the list from aircraft codes actually used in the flights files (1987 - 2008.csv)
 void load_aircraft(std::ifstream& aircraft_file, std::tr1::unordered_map<std::string, int>& aircraft_indices)
 {
     typedef string_field code;
@@ -241,7 +262,7 @@ void load_aircraft(std::ifstream& aircraft_file, std::tr1::unordered_map<std::st
     std::cout << "Aircraft count: " << aircraft_count - 1 <<  std::endl;
 }
 
-
+// Load airport codes from a file.
 void load_airports(std::ifstream& airport_file, std::tr1::unordered_map<std::string, int>& airport_indices)
 {
     typedef quoted_string_field code;
@@ -275,6 +296,7 @@ void load_airports(std::ifstream& airport_file, std::tr1::unordered_map<std::str
     std::cout << "Airport count: " << airport_count - 1 <<  std::endl;
 }
 
+// Define cancellation codes.
 void load_cancellation_codes(std::tr1::unordered_map<std::string, int>& cancellation_code_indices)
 {
     // A = carrier, B = weather, C = NAS, D = security        
@@ -287,7 +309,15 @@ void load_cancellation_codes(std::tr1::unordered_map<std::string, int>& cancella
     std::cout << "Cancellation code count: " << cancellation_code_indices.size() <<  std::endl;
 }
 
-/*   
+// =========================================================
+// Coordinate the processing of the source file and output to the destination file.
+// 1. Read the reference data files.
+// 2. Parse and transform the csv file rows into typed vectors.
+// 3. Output the typed vectors into a new destination file.
+
+/*  
+For reference:
+ 
 Field names (29 columns): 
 
     Name    Description
@@ -336,6 +366,8 @@ The layout matches the typedefs for field groups below.
 
 int main(int argc, char **argv)
 {
+	// Timing
+	
     time_t start_time;
     time_t end_time;
     struct tm * timeinfo;
@@ -344,6 +376,8 @@ int main(int argc, char **argv)
 
     struct lconv * lc;
 
+	// Data structures to receive a csv file row.
+	
 	//const int default_value = INT_MAX;
 	const int default_value = -1;
     typedef integer_field<default_value> year;
@@ -392,7 +426,9 @@ int main(int argc, char **argv)
     typedef fusion::vector<cancelled, cancellation_code, diverted, carrier_delay, weather_delay, nas_delay, security_delay> csv_row3;
     typedef fusion::vector<late_aircraft_delay> csv_row4;
     
+    // Interpret the command line parameters and perform input validation.
     // TODO RR: Sorry! ugly mixture to c and c++ I might fix one day.
+    
     if (argc == 3)
     {
         printf ("Locale: %s\n", setlocale(LC_ALL, NULL));
@@ -446,6 +482,8 @@ int main(int argc, char **argv)
             return 1;
         }
         
+        // Load the reference data from files or define it inline.
+        
         std::tr1::unordered_map<std::string, int> carrier_indices;
         load_carriers(carrier_file, carrier_indices);
         unique_carrier::s_lookup_table = carrier_indices; 
@@ -481,6 +519,8 @@ int main(int argc, char **argv)
         {
             std::cout << (*it).first << "," << (*it).second << std::endl;
         }
+        
+        // Read the csv file records from the input file.
 
         std::string aline;
         csv_row0 csv0;
@@ -498,7 +538,7 @@ int main(int argc, char **argv)
             } 
             else
             {
-                // Process the CSV rows.
+                // Parse the CSV rows, transform the fields and store in the data structure
                 
                 std::stringstream row(aline);
                 using fusion::operator >>;
@@ -512,7 +552,8 @@ int main(int argc, char **argv)
                 row.ignore(std::numeric_limits<std::streamsize>::max(), ',');
                 row  >> csv4;
                                 
-                //destination_file << line << std::endl;
+                // Output the data structure into the new csv output file.
+                
                 using fusion::operator <<;
                 destination_file
                     // Set delimiters within field groups.
@@ -528,6 +569,8 @@ int main(int argc, char **argv)
 
             line_count++;
         }
+        
+        // Report statistics on the calculation.
         
         std::cout << "Line count: " << line_count - 1 <<  std::endl;
 
