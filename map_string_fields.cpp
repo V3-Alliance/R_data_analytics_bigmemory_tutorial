@@ -180,6 +180,39 @@ void load_carriers(std::ifstream& carrier_file, std::tr1::unordered_map<std::str
 	std::cout << "Carrier count: " << carrier_count - 1 <<  std::endl;
 }
 
+void load_aircraft(std::ifstream& aircraft_file, std::tr1::unordered_map<std::string, int>& aircraft_indices)
+{
+	typedef string_field code;
+	typedef std::string description;
+    typedef fusion::vector<code, description> aircraft_details;
+
+	std::string aline;
+	aircraft_details aircraft;
+	long aircraft_count = 0;
+	
+	while ( std::getline (aircraft_file, aline) )
+	{
+		if (aircraft_count == 0)
+		{
+			// Ignore header line: Code, Description       		
+		} 
+		else
+		{
+			// Process the CSV rows.
+			
+			std::stringstream row(aline);
+			using fusion::operator >>;
+    		using fusion::at_c;
+			row  >> fusion::tuple_open("") << fusion::tuple_close("") << fusion::tuple_delimiter(',') >> aircraft;
+			aircraft_indices[at_c<0>(aircraft).value] = aircraft_count;
+		}
+
+		aircraft_count++;
+	}
+	
+	std::cout << "Aircraft count: " << aircraft_count - 1 <<  std::endl;
+}
+
 int main(int argc, char **argv)
 {
     time_t start_time;
@@ -247,8 +280,8 @@ The layout matches the typedefs for field groups below.
 	typedef integer_field crs_arr_time;
 	
 	typedef lookup_field<unique_carrier_id> unique_carrier;
-	typedef lookup_field<aircraft_id> flight_num;
-	typedef integer_field tail_num;
+	typedef integer_field flight_num;
+	typedef lookup_field<aircraft_id> tail_num;
 	typedef integer_field actual_elapsed_time;
 	typedef integer_field crs_elapsed_time;
 	typedef integer_field air_time;
@@ -302,12 +335,30 @@ The layout matches the typedefs for field groups below.
             std::cout << "Null input file pointer from path: " <<  carrier_file <<  std::endl;
             return 1;
         }
+	
+		char aircraft_file_name[] = "plane-data.csv";
+        std::cout << "Aircraft file path: " <<  aircraft_file_name <<  std::endl;
+        std::ifstream aircraft_file(aircraft_file_name);
+        if (!aircraft_file.is_open())
+        {
+            std::cout << "Null input file pointer from path: " <<  aircraft_file <<  std::endl;
+            return 1;
+        }
         
         std::tr1::unordered_map<std::string, int> carrier_indices;
 		load_carriers(carrier_file, carrier_indices);
 		unique_carrier::s_lookup_table = carrier_indices; 
 		std::cout << carrier_indices.size() << std::endl;
 		for (std::tr1::unordered_map<std::string, int>::iterator it = carrier_indices.begin(); it != carrier_indices.end(); ++it)
+		{
+			std::cout << (*it).first << "," << (*it).second << std::endl;
+		}
+        
+        std::tr1::unordered_map<std::string, int> aircraft_indices;
+		load_aircraft(aircraft_file, aircraft_indices);
+		tail_num::s_lookup_table = aircraft_indices; 
+		std::cout << aircraft_indices.size() << std::endl;
+		for (std::tr1::unordered_map<std::string, int>::iterator it = aircraft_indices.begin(); it != aircraft_indices.end(); ++it)
 		{
 			std::cout << (*it).first << "," << (*it).second << std::endl;
 		}
