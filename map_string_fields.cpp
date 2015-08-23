@@ -16,7 +16,7 @@
 //     http://stat-computing.org/dataexpo/2009/carriers.csv
 //     http://stat-computing.org/dataexpo/2009/plane-data.csv
 
-// To compile this c++ program
+// To compile this c++ program (on Macos X)
 //     gcc -W map_fields.cpp -o map_fields  -stdlib=libstdc++ -lstdc++ 
 // Run it with: 
 //     $ ./map_fields [source-filename] [destination_filename]
