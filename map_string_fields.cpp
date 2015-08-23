@@ -145,6 +145,7 @@ std::tr1::unordered_map<std::string, int> lookup_field<T>::s_lookup_table = std:
 
 struct unique_carrier_id {};
 struct aircraft_id {};
+struct airport_id {};
 
 
 void load_carriers(std::ifstream& carrier_file, std::tr1::unordered_map<std::string, int>& carrier_indices)
@@ -213,6 +214,40 @@ void load_aircraft(std::ifstream& aircraft_file, std::tr1::unordered_map<std::st
 	std::cout << "Aircraft count: " << aircraft_count - 1 <<  std::endl;
 }
 
+
+void load_airports(std::ifstream& airport_file, std::tr1::unordered_map<std::string, int>& airport_indices)
+{
+	typedef quoted_string_field code;
+	typedef std::string description;
+    typedef fusion::vector<code, description> airport_details;
+
+	std::string aline;
+	airport_details airport;
+	long airport_count = 0;
+	
+	while ( std::getline (airport_file, aline) )
+	{
+		if (airport_count == 0)
+		{
+			// Ignore header line: Code, Description       		
+		} 
+		else
+		{
+			// Process the CSV rows.
+			
+			std::stringstream row(aline);
+			using fusion::operator >>;
+    		using fusion::at_c;
+			row  >> fusion::tuple_open("") << fusion::tuple_close("") << fusion::tuple_delimiter(',') >> airport;
+			airport_indices[at_c<0>(airport).value] = airport_count;
+		}
+
+		airport_count++;
+	}
+	
+	std::cout << "Airport count: " << airport_count - 1 <<  std::endl;
+}
+
 int main(int argc, char **argv)
 {
     time_t start_time;
@@ -238,8 +273,8 @@ Field names (29 columns):
 	8	CRSArrTime			scheduled arrival time (local, hhmm)
 	
 	9	UniqueCarrier		unique carrier code
-	10	FlightNum			flight number, looks like 
-	11	TailNum				plane tail number
+	10	FlightNum			flight number
+	11	TailNum				plane tail number, looks like N497WN.
 	12	ActualElapsedTime	in minutes
 	13	CRSElapsedTime		in minutes
 	14	AirTime				in minutes
@@ -287,6 +322,13 @@ The layout matches the typedefs for field groups below.
 	typedef integer_field air_time;
 	typedef integer_field arr_delay;
 	typedef integer_field dep_delay;
+	
+	typedef lookup_field<airport_id> origin;
+	typedef lookup_field<airport_id> destination;
+	typedef integer_field distance;
+	typedef integer_field taxi_in;
+	typedef integer_field taxi_out;
+
 
 	// Boost Fusion vector templates limited to 10 types so the 29 fields
 	// are broken up into field groups, each of which is below the 10 limit.
@@ -296,7 +338,7 @@ The layout matches the typedefs for field groups below.
 	// and this causes the parse to fall out of alignment.
     typedef fusion::vector<year, month, day_of_month, day_of_week, dep_time, crs_dep_time, arr_time, crs_arr_time> csv_row0;
     typedef fusion::vector<unique_carrier, flight_num, tail_num, actual_elapsed_time, crs_elapsed_time, air_time, arr_delay, dep_delay> csv_row1;
-    typedef fusion::vector<string_field, string_field, string_field, string_field, string_field> csv_row2;
+    typedef fusion::vector<origin, destination, distance, taxi_in, taxi_out> csv_row2;
     typedef fusion::vector<string_field, string_field, integer_field, integer_field, integer_field, integer_field, integer_field> csv_row3;
     typedef fusion::vector<integer_field> csv_row4;
     
@@ -344,6 +386,15 @@ The layout matches the typedefs for field groups below.
             std::cout << "Null input file pointer from path: " <<  aircraft_file <<  std::endl;
             return 1;
         }
+	
+		char airport_file_name[] = "airports.csv";
+        std::cout << "Airport file path: " <<  airport_file_name <<  std::endl;
+        std::ifstream airport_file(airport_file_name);
+        if (!airport_file.is_open())
+        {
+            std::cout << "Null input file pointer from path: " <<  airport_file <<  std::endl;
+            return 1;
+        }
         
         std::tr1::unordered_map<std::string, int> carrier_indices;
 		load_carriers(carrier_file, carrier_indices);
@@ -359,6 +410,15 @@ The layout matches the typedefs for field groups below.
 		tail_num::s_lookup_table = aircraft_indices; 
 		std::cout << aircraft_indices.size() << std::endl;
 		for (std::tr1::unordered_map<std::string, int>::iterator it = aircraft_indices.begin(); it != aircraft_indices.end(); ++it)
+		{
+			std::cout << (*it).first << "," << (*it).second << std::endl;
+		}
+        
+        std::tr1::unordered_map<std::string, int> airport_indices;
+		load_airports(airport_file, airport_indices);
+		origin::s_lookup_table = airport_indices; 
+		std::cout << airport_indices.size() << std::endl;
+		for (std::tr1::unordered_map<std::string, int>::iterator it = airport_indices.begin(); it != airport_indices.end(); ++it)
 		{
 			std::cout << (*it).first << "," << (*it).second << std::endl;
 		}
