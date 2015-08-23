@@ -110,6 +110,43 @@ struct integer_field
     }
 };
 
+// Looks for an 0 or positive integer value, but if it finds a "NA" it interprets it as a "-1".
+template <class T>
+struct lookup_field
+{
+    int value;
+    static std::tr1::unordered_map<std::string, int> s_lookup_table;
+    
+    // Read a string until a CSV delimiter is found.
+    friend std::istream& operator >> (std::istream& input_stream, lookup_field& csvi) {
+        csvi.value = INT_MAX;	// Default 
+		std::string buffer;
+		extract_field(input_stream, buffer);
+        if( buffer != "NA" )
+        {
+         	std::tr1::unordered_map<std::string, int>::const_iterator item_location = lookup_field::s_lookup_table.find(buffer);
+         	if (item_location != lookup_field::s_lookup_table.end())
+         	{
+        		csvi.value = item_location->second;
+         	}
+        }
+        return input_stream;
+    }
+
+	// Write a csv integer string.
+    friend std::ostream& operator << (std::ostream& output_stream, lookup_field const& csvi) 
+    {
+        return output_stream << csvi.value;
+    }
+};
+
+template <class T>
+std::tr1::unordered_map<std::string, int> lookup_field<T>::s_lookup_table = std::tr1::unordered_map<std::string, int>();
+
+struct unique_carrier_id {};
+struct aircraft_id {};
+
+
 void load_carriers(std::ifstream& carrier_file, std::tr1::unordered_map<std::string, int>& carrier_indices)
 {
 	typedef quoted_string_field code;
@@ -168,7 +205,7 @@ Field names (29 columns):
 	8	CRSArrTime			scheduled arrival time (local, hhmm)
 	
 	9	UniqueCarrier		unique carrier code
-	10	FlightNum			flight number
+	10	FlightNum			flight number, looks like 
 	11	TailNum				plane tail number
 	12	ActualElapsedTime	in minutes
 	13	CRSElapsedTime		in minutes
@@ -209,8 +246,8 @@ The layout matches the typedefs for field groups below.
 	typedef integer_field arr_time;
 	typedef integer_field crs_arr_time;
 	
-	typedef integer_field unique_carrier;
-	typedef integer_field flight_num;
+	typedef lookup_field<unique_carrier_id> unique_carrier;
+	typedef lookup_field<aircraft_id> flight_num;
 	typedef integer_field tail_num;
 	typedef integer_field actual_elapsed_time;
 	typedef integer_field crs_elapsed_time;
@@ -268,13 +305,12 @@ The layout matches the typedefs for field groups below.
         
         std::tr1::unordered_map<std::string, int> carrier_indices;
 		load_carriers(carrier_file, carrier_indices);
+		unique_carrier::s_lookup_table = carrier_indices; 
 		std::cout << carrier_indices.size() << std::endl;
 		for (std::tr1::unordered_map<std::string, int>::iterator it = carrier_indices.begin(); it != carrier_indices.end(); ++it)
 		{
 			std::cout << (*it).first << "," << (*it).second << std::endl;
 		}
-		
-		return 0;
         
         std::string aline;
 		csv_row0 csv0;
