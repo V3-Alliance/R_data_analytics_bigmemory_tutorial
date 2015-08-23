@@ -1,7 +1,32 @@
-// gcc -W map_fields.cpp -o map_fields  -stdlib=libstdc++ -lstdc++ 
-// Run it with: $ ./map_fields [source-filename] [destination_filename]
+// Preprocessing the airline data at:
+// http://stat-computing.org/dataexpo/2009/the-data.html
+// prior to processing by bigmemory.
+ 
+// Bigmemory, and in particular big.matrix, requires that all of the data be numerical and of a uniform type.
+// In this case all bigmemory values are to be integers, so string
+// fields in the csv files are mapped to integers via the code here.
+// "NA" or "" values are also mapped to some "missing value" integer, most likely MAX_INT.
+
+// Data downloaded via wget at: 
+// One of many data files: 
+//      http://stat-computing.org/dataexpo/2009/2008.csv.bz2
+
+// Supplemental data at:
+//     http://stat-computing.org/dataexpo/2009/airports.csv
+//     http://stat-computing.org/dataexpo/2009/carriers.csv
+//     http://stat-computing.org/dataexpo/2009/plane-data.csv
+
+// To compile this c++ program
+//     gcc -W map_fields.cpp -o map_fields  -stdlib=libstdc++ -lstdc++ 
+// Run it with: 
+//     $ ./map_fields [source-filename] [destination_filename]
 
 // See: http://stackoverflow.com/questions/1120140/how-can-i-read-and-parse-csv-files-in-c
+// The boost fusion approach used here is problematical, as it needs a bit,
+// actually a lot, of convincing to get it to work. 
+// The documentation is not explicit enough.
+// boost fusion also needs extra code for new types of csv file and is limited in the
+// number of fields it can handle conveniently.
 
 #include <climits>
 #include <iostream>
@@ -25,7 +50,6 @@
 
 #include <boost/fusion/algorithm/iteration/accumulate.hpp>
 #include <boost/fusion/include/accumulate.hpp>
-
 
 namespace fusion = boost::fusion;
 
@@ -151,7 +175,6 @@ struct aircraft_id {};
 struct airport_id {};
 struct cancellation_code_id {};
 
-
 void load_carriers(std::ifstream& carrier_file, std::tr1::unordered_map<std::string, int>& carrier_indices)
 {
     typedef quoted_string_field code;
@@ -264,18 +287,7 @@ void load_cancellation_codes(std::tr1::unordered_map<std::string, int>& cancella
     std::cout << "Cancellation code count: " << cancellation_code_indices.size() <<  std::endl;
 }
 
-int main(int argc, char **argv)
-{
-    time_t start_time;
-    time_t end_time;
-    struct tm * timeinfo;
-    char buffer [80];
-    double duration_secs;
-
-    struct lconv * lc;
-
 /*   
-
 Field names (29 columns): 
 
     Name    Description
@@ -321,6 +333,17 @@ The layout matches the typedefs for field groups below.
     0,NA,0,NA,NA,NA,NA,
     NA
 */
+
+int main(int argc, char **argv)
+{
+    time_t start_time;
+    time_t end_time;
+    struct tm * timeinfo;
+    char buffer [80];
+    double duration_secs;
+
+    struct lconv * lc;
+
 	//const int default_value = INT_MAX;
 	const int default_value = -1;
     typedef integer_field<default_value> year;
@@ -356,8 +379,6 @@ The layout matches the typedefs for field groups below.
     typedef integer_field<default_value> security_delay;
     
     typedef integer_field<default_value> late_aircraft_delay;
-    
-
 
     // Boost Fusion vector templates limited to 10 types so the 29 fields
     // are broken up into field groups, each of which is below the 10 limit.
@@ -490,8 +511,7 @@ The layout matches the typedefs for field groups below.
                 row  >> csv3;
                 row.ignore(std::numeric_limits<std::streamsize>::max(), ',');
                 row  >> csv4;
-                
-                
+                                
                 //destination_file << line << std::endl;
                 using fusion::operator <<;
                 destination_file
@@ -507,10 +527,6 @@ The layout matches the typedefs for field groups below.
             }
 
             line_count++;
-            //if (line_count == 4)
-            //{
-            //  return 0;
-            //}
         }
         
         std::cout << "Line count: " << line_count - 1 <<  std::endl;
