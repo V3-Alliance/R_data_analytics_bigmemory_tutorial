@@ -1,6 +1,11 @@
 # Tutorial 3: High Performance Data Analytics with R (package: bigmemory) 
 
-# This example concatenates a group of csv data files so they can be processed by bigmemory.
+# Execute this code like so:
+# $ qsub pbs_R_bigmemory_3.sh
+
+# This example reads a group of csv data files 
+# and generates corresponding big.matrices that are file-backed.
+# Concatenating the big.matrices into one is left to tutorial_bigmemory_4.R
 # It does not use cluster computing.
 # It does demonstrated how to benchmark R code for performance.
 
@@ -61,14 +66,14 @@ read_csv_file_into_bigmatrix = function (file_name_csv) {
 	matrix_0 = read.big.matrix(file_path_csv, sep = ',', header = TRUE, 
 	    col.names = NULL, row.names = NULL, has.row.names=FALSE, ignore.row.names=FALSE,
 	    type = NA, skip = 0, separated = FALSE,
-	    backingfile = matrix_file_name , backingpath = "/lustre/pVPAC0012/")
+	    backingfile = matrix_file_name , backingpath = "/lustre/pVPAC0012/big_matrices")
 	    #backingfile = NULL , backingpath = NULL) Causes the Out Of Memory (OOM) daemon to kill the process.
 	flush(matrix_0)
 }
 
 # ============================================================
 
-project_storage_path = "/lustre/pVPAC0012"
+project_storage_path = "/lustre/pVPAC0012/preprocessed"
 file_names <- list.files(path = project_storage_path, pattern = "^\\d{4}\\.csv$")
 file_count <- length(file_names)
 #file_index_start <- 1
