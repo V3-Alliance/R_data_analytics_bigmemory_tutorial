@@ -36,6 +36,6 @@ These are:
 The first of these is used to removed non-ascii characters from 2 of the 
 flight details CSV files.
 
-The second is used to replace string field values with integer values
+The second is used to replace string field values with integer values,
 as big.matrix has to have elements that are uniformly some numerical
 type (which in this case are integers).
