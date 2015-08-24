@@ -1,4 +1,7 @@
-# Tutorial 4: High Performance Data Analytics with R (package: bigmemory) 
+# Tutorial 3: High Performance Data Analytics with R (package: bigmemory) 
+
+# Execute this code like so:
+# $ qsub pbs_R_bigmemory_4.sh
 
 # This example concatenates a group of csv data files so they can be processed by bigmemory.
 # It does not use cluster computing.
@@ -54,22 +57,25 @@ library(bigmemory)
 # Constants
 
 project_storage_path = "/lustre/pVPAC0012"
+input_folder_path <- paste(project_storage_path, "preprocessed", sep = "/")
+output_folder_path <- paste(project_storage_path, "big_matrices", sep = "/")
 
 # ============================================================
-# Function definitions
+# Define functions.
 
 read_csv_file_into_bigmatrix = function (file_name_csv) {
 	cat("\nFile: ", file_name_csv, "\n")
-	file_path_csv <- paste(project_storage_path, file_name_csv, sep = "/")
+	file_path_csv <- paste(input_folder_path, file_name_csv, sep = "/")
 	base_name = strsplit(file_name_csv, "\\.")[[1]][1]
 	matrix_file_name = paste(base_name, "matrix", sep = ".")
 	desc_file_name = paste(base_name, "desc", sep = ".")
-	matrix_file_path = paste(project_storage_path, matrix_file_name, sep = "/")
+	#matrix_file_path = paste(output_folder_path, matrix_file_name, sep = "/")
 	matrix_0 = read.big.matrix(file_path_csv, sep = ',', header = TRUE, 
 	    col.names = NULL, row.names = NULL, has.row.names=FALSE, ignore.row.names=FALSE,
-	    type = NA, skip = 0, separated = FALSE,
-	    backingfile = matrix_file_name, backingpath = project_storage_path,
-	    descriptor = desc_file_name)
+	    type = "integer", skip = 0, separated = FALSE,
+	    backingfile = matrix_file_name , backingpath = output_folder_path, 
+	    descriptorfile = desc_file_name)
+	    #backingfile = NULL , backingpath = NULL) Causes the Out of memory killer to kill the process.
 	flush(matrix_0)
 	return(matrix_0)
 }
@@ -80,7 +86,7 @@ matrix_list = list()
 row_count <- 0
 col_count <- 0
 
-file_names <- list.files(path = project_storage_path, pattern = "^\\d{4}\\.csv$")
+file_names <- list.files(path = input_folder_path, pattern = "^\\d{4}\\.csv$")
 
 file_count <- length(file_names)
 cat("\nFile count: ", file_count, "\n")
@@ -89,9 +95,10 @@ cat("\nFile count: ", file_count, "\n")
 # while skipping files already processed.
 
 # Set to 1 if we just want to process the last file.
-#file_count_0 <- 1
+file_count_0 <- 4
 # Set to file_count if we want to process all files.
-file_count_0 <- file_count
+# But that will take a couple of hours.
+# file_count_0 <- file_count
 
 file_index_start <- file_count - file_count_0 + 1
 
@@ -119,7 +126,7 @@ for (file_index in file_index_start:file_count) {
 
 full_matrix <- filebacked.big.matrix(row_count, col_count, type="integer", init=NULL, 
 	dimnames = NULL, separated = FALSE, 
-	backingfile = "all.matrix", backingpath = project_storage_path, descriptorfile = "all.matrix.desc")
+	backingfile = "all.matrix", backingpath = output_folder_path, descriptorfile = "all.matrix.desc")
 
 # Populate the whole result matrix.
 
