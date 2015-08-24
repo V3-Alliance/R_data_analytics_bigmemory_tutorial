@@ -1,5 +1,8 @@
 # Tutorial 6: High Performance Data Analytics with R (package: bigmemory) 
 
+# Execute this code like so:
+# $ qsub pbs_R_bigmemory_6.sh
+
 # This example queries the humungous big.matrix file.
 # It does not use cluster computing.
 # It does demonstrated how to benchmark R code for performance.
@@ -28,15 +31,17 @@ library(bigmemory)
 # Constants.
 
 project_storage_path = "/lustre/pVPAC0012"
+input_folder_path <- paste(project_storage_path, "big_matrices", sep = "/")
+output_folder_path <- paste(project_storage_path, "big_matrices", sep = "/")
 
 # ============================================================
 # Function definitions.
 
 attach_bigmatrix = function (file_name_desc) {
-	file_path_desc <- paste(project_storage_path, file_name_desc, sep = "/")
+	file_path_desc <- paste(input_folder_path, file_name_desc, sep = "/")
 	cat("\nFile: ", file_name_desc, "\n")
 	datadesc <- dget(file_path_desc)
-	matrix_0 = attach.big.matrix(datadesc, path=project_storage_path)
+	matrix_0 = attach.big.matrix(datadesc, path=input_folder_path)
 	return(matrix_0)
 }
 
