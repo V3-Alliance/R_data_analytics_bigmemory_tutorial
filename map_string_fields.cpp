@@ -16,8 +16,10 @@
 //     http://stat-computing.org/dataexpo/2009/carriers.csv
 //     http://stat-computing.org/dataexpo/2009/plane-data.csv
 
-// To compile this c++ program (on Macos X)
+// To compile this c++ program on Macos X:
 //     gcc -W map_string_fields.cpp -o map_fields  -stdlib=libstdc++ -lstdc++ 
+// To compile this c++ program on linux:
+//     g++ -W map_string_fields.cpp -o map_fields
 // Run it with: 
 //     $ ./map_fields [source-filename] [destination_filename]
 
@@ -429,7 +431,7 @@ int main(int argc, char **argv)
     // Interpret the command line parameters and perform input validation.
     // TODO RR: Sorry! ugly mixture to c and c++ I might fix one day.
     
-    if (argc == 3)
+    if (argc == 3 || argc == 4)
     {
         printf ("Locale: %s\n", setlocale(LC_ALL, NULL));
         time ( &start_time );
@@ -454,10 +456,18 @@ int main(int argc, char **argv)
             std::cout << "Null output file pointer from path: " <<  destination_file <<  std::endl;
             return 1;
         }
+
+		std::string reference_data_path = "./";
+        if (argc == 4)
+        {
+            reference_data_path = argv[3];
+        }
+        std::cout << "Reference data folder path: " <<  reference_data_path <<  std::endl;
+        std::cout << "(E.g. /path/to/reference/data/)" <<  std::endl;
     
         char carrier_file_name[] = "carriers.csv";
-        std::cout << "Carriers file path: " <<  carrier_file_name <<  std::endl;
-        std::ifstream carrier_file(carrier_file_name);
+        std::cout << "Carriers file path: " <<  reference_data_path + carrier_file_name <<  std::endl;
+        std::ifstream carrier_file((reference_data_path + carrier_file_name).c_str());
         if (!carrier_file.is_open())
         {
             std::cout << "Null input file pointer from path: " <<  carrier_file <<  std::endl;
@@ -465,8 +475,8 @@ int main(int argc, char **argv)
         }
     
         char aircraft_file_name[] = "plane-data.csv";
-        std::cout << "Aircraft file path: " <<  aircraft_file_name <<  std::endl;
-        std::ifstream aircraft_file(aircraft_file_name);
+        std::cout << "Aircraft file path: " <<  reference_data_path + aircraft_file_name <<  std::endl;
+        std::ifstream aircraft_file((reference_data_path + aircraft_file_name).c_str());
         if (!aircraft_file.is_open())
         {
             std::cout << "Null input file pointer from path: " <<  aircraft_file <<  std::endl;
@@ -474,8 +484,8 @@ int main(int argc, char **argv)
         }
     
         char airport_file_name[] = "airports.csv";
-        std::cout << "Airport file path: " <<  airport_file_name <<  std::endl;
-        std::ifstream airport_file(airport_file_name);
+        std::cout << "Airport file path: " <<  reference_data_path + airport_file_name <<  std::endl;
+        std::ifstream airport_file((reference_data_path + airport_file_name).c_str());
         if (!airport_file.is_open())
         {
             std::cout << "Null input file pointer from path: " <<  airport_file <<  std::endl;
@@ -590,7 +600,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        std::cout << "Use: ./map_fields [source-filename] [destination_filename]" <<  std::endl;
+        std::cout << "Use: ./map_fields [source-filename] [destination_filename] [reference_data_path]" <<  std::endl;
         return 1;
     }
 }
