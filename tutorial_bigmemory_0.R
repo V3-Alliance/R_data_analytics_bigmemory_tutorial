@@ -1,5 +1,12 @@
 # Tutorial 0: High Performance Data Analytics with R (package: bigmemory) 
 
+# Execute this code like so:
+# $ qsub -l walltime=0:10:0,nodes=1:ppn=8 -X -I
+# $ module load R
+# $ cd $PBS_O_WORKDIR 
+# $ R --vanilla < tutorial_bigmemory_0.R
+# $ exit
+
 # This example is the baseline for a series of HPC/R tutorials.
 # It does not use cluster computing.
 # It does demonstrated how to benchmark R code for performance.

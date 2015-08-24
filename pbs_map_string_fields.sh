@@ -44,8 +44,11 @@ cd $PBS_O_WORKDIR
 
 #PBS -t 1987-1988
 
-#cd /path/to/my/program
-
 ./map_fields /lustre/pVPAC0012/raw/${PBS_ARRAYID}.csv /lustre/pVPAC0012/preprocessed/${PBS_ARRAYID}.csv /lustre/pVPAC0012/reference_data/
 
-
+# map_fields-<1987-2008>.out will contain the mapping 
+# between string identifiers and integers for:
+#        airports (flight origin and destination)
+#        carriers
+#        planes
+#        cancellation codes.
