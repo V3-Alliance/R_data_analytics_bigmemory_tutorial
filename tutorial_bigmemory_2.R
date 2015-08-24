@@ -1,5 +1,8 @@
 # Tutorial 1: High Performance Data Analytics with R (package: bigmemory) 
 
+# Execute this code like so:
+# $ qsub pbs_R_bigmemory_2.sh
+
 # This example tests how column vs row population of big.matrix affects exection time.
 # It does not use cluster computing.
 # It does demonstrated how to benchmark R code for performance.

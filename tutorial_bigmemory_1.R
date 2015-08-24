@@ -13,6 +13,13 @@
 # Measure how a calculation's duration scales with calculation complexity.
 # The results are output to the R console.
 
+# Execute this code like so:
+# $ qsub -l walltime=0:10:0,nodes=1:ppn=8 -X -I
+# $ module load R
+# $ cd $PBS_O_WORKDIR 
+# $ R --vanilla < tutorial_bigmemory_1.R
+# $ exit
+
 # Setup:
 # Within the R environment verify that the bigmemory package is installed.
 # > installed.packages('bigmemory')
