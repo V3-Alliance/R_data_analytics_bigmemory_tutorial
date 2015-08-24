@@ -6,12 +6,12 @@ scripts to run the R code via the PBS queue, which in turn distribute the comput
 across the nodes of the cluster.
 
 The PBS scripts are:
-    * pbs_R_bigmemory_2.sh
-    * pbs_R_bigmemory_3.sh
-    * pbs_R_bigmemory_4.sh
-    * pbs_R_bigmemory_5.sh
-    * pbs_R_bigmemory_6.sh
-    * pbs_R_bigmemory_7.sh
+* pbs_R_bigmemory_2.sh
+* pbs_R_bigmemory_3.sh
+* pbs_R_bigmemory_4.sh
+* pbs_R_bigmemory_5.sh
+* pbs_R_bigmemory_6.sh
+* pbs_R_bigmemory_7.sh
 
 The corresponding R scripts executed by the PBS scripts are: 
     * tutorial_bigmemory_0.R
