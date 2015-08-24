@@ -56,28 +56,37 @@
 library(bigmemory)
 
 # ============================================================
+# Constants
+
+project_storage_path <- "/lustre/pVPAC0012"
+input_folder_path <- paste(project_storage_path, "preprocessed", sep = "/")
+output_folder_path <- paste(project_storage_path, "big_matrices", sep = "/")
+
+# ============================================================
+# Define functions.
 
 read_csv_file_into_bigmatrix = function (file_name_csv) {
 	cat("\nFile: ", file_name_csv)
-	file_path_csv <- paste(project_storage_path, file_name_csv, sep = "/")
+	file_path_csv <- paste(input_folder_path, file_name_csv, sep = "/")
 	base_name = strsplit(file_name_csv, "\\.")[[1]][1]
 	matrix_file_name = paste(base_name, "matrix", sep = ".")
-	matrix_file_path = paste(project_storage_path, matrix_file_name, sep = "/")
+	desc_file_name = paste(base_name, "desc", sep = ".")
+	# matrix_file_path = paste(project_storage_path, matrix_file_name, sep = "/")
 	matrix_0 = read.big.matrix(file_path_csv, sep = ',', header = TRUE, 
 	    col.names = NULL, row.names = NULL, has.row.names=FALSE, ignore.row.names=FALSE,
-	    type = NA, skip = 0, separated = FALSE,
-	    backingfile = matrix_file_name , backingpath = "/lustre/pVPAC0012/big_matrices")
+	    type = "integer", skip = 0, separated = FALSE,
+	    backingfile = matrix_file_name , backingpath = output_folder_path, 
+	    descriptorfile = desc_file_name)
 	    #backingfile = NULL , backingpath = NULL) Causes the Out Of Memory (OOM) daemon to kill the process.
 	flush(matrix_0)
 }
 
 # ============================================================
 
-project_storage_path = "/lustre/pVPAC0012/preprocessed"
-file_names <- list.files(path = project_storage_path, pattern = "^\\d{4}\\.csv$")
+file_names <- list.files(path = input_folder_path, pattern = "^\\d{4}\\.csv$")
 file_count <- length(file_names)
-#file_index_start <- 1
-file_index_start <- 18
+file_index_start <- 1
+#file_index_start <- 18
 for (file_index in file_index_start:file_count) {
 
 	# Benchmark start time.
