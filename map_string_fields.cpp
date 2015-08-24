@@ -3,7 +3,7 @@
 // prior to processing by bigmemory.
  
 // Bigmemory, and in particular big.matrix, requires that all of the data be numerical and of a uniform type.
-// In this case all bigmemory values are to be integers, so string
+// In this case all big.matrix values are to be integers, so string
 // fields in the csv files are mapped to integers via the code here.
 // "NA" or "" values are also mapped to some "missing value" integer, most likely MAX_INT.
 
@@ -17,7 +17,7 @@
 //     http://stat-computing.org/dataexpo/2009/plane-data.csv
 
 // To compile this c++ program (on Macos X)
-//     gcc -W map_fields.cpp -o map_fields  -stdlib=libstdc++ -lstdc++ 
+//     gcc -W map_string_fields.cpp -o map_fields  -stdlib=libstdc++ -lstdc++ 
 // Run it with: 
 //     $ ./map_fields [source-filename] [destination_filename]
 
